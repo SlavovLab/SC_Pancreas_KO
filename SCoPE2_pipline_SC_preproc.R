@@ -363,10 +363,13 @@ mat.sc.imp <- t6
 
 X.m <-  mat.sc.imp
 
-write.csv(t6,'/Users/andrewleduc/Library/CloudStorage/GoogleDrive-leduc.an@husky.neu.edu/.shortcut-targets-by-id/1uQ4exoKlaZAGnOG1iCJPzYN3ooYYZB7g/MS/Collaborators/Juan_ap_al/Knock_out_Study/Protein_imputed.csv')
-write.csv(t7,'/Users/andrewleduc/Library/CloudStorage/GoogleDrive-leduc.an@husky.neu.edu/.shortcut-targets-by-id/1uQ4exoKlaZAGnOG1iCJPzYN3ooYYZB7g/MS/Collaborators/Juan_ap_al/Knock_out_Study/Protein_uniputed.csv')
-write.csv(t3,'/Users/andrewleduc/Library/CloudStorage/GoogleDrive-leduc.an@husky.neu.edu/.shortcut-targets-by-id/1uQ4exoKlaZAGnOG1iCJPzYN3ooYYZB7g/MS/Collaborators/Juan_ap_al/Knock_out_Study/peptide_uniputed.csv')
-write.csv(ev.melt.uniqueID,'/Users/andrewleduc/Desktop/meta.csv')
+write.csv(t6,'/Users/andrewleduc/Library/CloudStorage/GoogleDrive-leduc.an@husky.neu.edu/.shortcut-targets-by-id/1uQ4exoKlaZAGnOG1iCJPzYN3ooYYZB7g/MS/SuppData/2023_Leduc_Montalvo_Panc/Protein_imputed.csv')
+write.csv(t7,'/Users/andrewleduc/Library/CloudStorage/GoogleDrive-leduc.an@husky.neu.edu/.shortcut-targets-by-id/1uQ4exoKlaZAGnOG1iCJPzYN3ooYYZB7g/MS/SuppData/2023_Leduc_Montalvo_Panc/Protein_uniputed.csv')
+write.csv(t3,'/Users/andrewleduc/Library/CloudStorage/GoogleDrive-leduc.an@husky.neu.edu/.shortcut-targets-by-id/1uQ4exoKlaZAGnOG1iCJPzYN3ooYYZB7g/MS/SuppData/2023_Leduc_Montalvo_Panc/Peptide_uniputed.csv')
+
+
+
+
 
 
 pca.imp.cor <- cor(X.m, use = 'pairwise.complete.obs',method = c('pearson'))
@@ -394,7 +397,7 @@ PCy<-"PC2"
 
 
 # Display 
-ggscatter(pca.display,color = 'celltype', x =PCx, y = PCy ,  size = 5, alpha=0.5) +
+ggscatter(pca.display,color = 'Cell_type', x =PCx, y = PCy ,  size = 5, alpha=0.5) +
   xlab(paste0(PCx,"  (", round(percent_var[1],0),"%)")) +
   ylab(paste0(PCy,"  (", round(percent_var[2],0),"%)")) +
   font("ylab",size=30) +
@@ -500,9 +503,9 @@ prot_meta <- (as.data.frame(prot_umap@reductions[["umap"]]@cell.embeddings))
 prot_meta$clust <- prot_umap@meta.data$seurat_clusters
 prot_meta$Condition <- pca.display$celltype
 
-t7_plot <- t7['P55095',]
-prot_meta$prot <- t7_plot
 
+
+view(prot_meta)
 # Display 
 ggscatter(prot_meta,color = 'prot', x ="UMAP_1", y = "UMAP_2" ,  size = 5, alpha=0.5) +
   font("ylab",size=30) +
@@ -542,5 +545,42 @@ df <- as.data.frame(prot)
 df$dif <- dif
 df$pval <- pval
 
+prot_meta$id <- rownames(prot_meta)
+prot_meta <- prot_meta %>% left_join(ev.melt.uniqueID,  by = c('id'))
+
+t7_plot <- t7['P55095',]
+prot_meta$Gcg <- t7_plot
+
+t7_plot <- t7['P01325',]
+prot_meta$ins1 <- t7_plot
+
+t7_plot <- t7['P01326',]
+prot_meta$ins2 <- t7_plot
+
+t7_plot <- t7['P10601',]
+prot_meta$ppy <- t7_plot
 
 
+
+Ppy <- ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = prot)) + geom_point() + dot_plot+
+  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
+                        high = "red",name = 'log2(Protein Abs.)')+ggtitle('Ppy')
+
+Ins1 <- ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = ins1)) + geom_point() + dot_plot+
+  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
+                        high = "red",name = 'log2(Protein Abs.)')+ggtitle('Ins1')
+
+Ins2 <- ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = )) + geom_point() + dot_plot+
+  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
+                        high = "red",name = 'log2(Protein Abs.)')+ggtitle('Ins2')
+
+
+Gcg <- ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = Gcg)) + geom_point() + dot_plot+
+  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
+                        high = "red",name = 'log2(Protein Abs.)')+ggtitle('Gcg')
+
+
+(Ppy + Gcg) / (Ins1+Ins2)
+
+
+write.csv(prot_meta,'/Users/andrewleduc/Library/CloudStorage/GoogleDrive-leduc.an@husky.neu.edu/.shortcut-targets-by-id/1uQ4exoKlaZAGnOG1iCJPzYN3ooYYZB7g/MS/SuppData/2023_Leduc_Montalvo_Panc/meta.csv')

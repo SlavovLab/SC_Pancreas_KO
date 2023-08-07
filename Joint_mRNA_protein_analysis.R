@@ -1,19 +1,20 @@
 #Source functions for integration
-source('/Users/andrewleduc/Desktop/Current_projects/Senescense/Trachea/Joint_mRNA_prot_functions.R')
+source('Joint_mRNA_prot_functions.R')
 
 # Read in protein data
+# can be found with proc data on gdrive 
 
-convert_mouse <- Proc_fasta('/Users/andrewleduc/Desktop/Current_projects/Senescense/Mouse.fasta')
+# https://drive.google.com/drive/folders/1xHlUsGOfdpdL3byPbcSTX7OYU-dw02_T?usp=sharing
+convert_mouse <- Proc_fasta('Mouse.fasta')
+protein_norm_imp <- read.prot_gene('',convert_mouse)
+protein_norm_noimp <- read.prot_gene('',convert_mouse)
+prot_meta <- read.csv('',row.names = 1)
 
-protein_norm_imp <- read.prot_gene('/Users/andrewleduc/Desktop/Current_projects/Juan/prot_imp.csv',convert_mouse)
-protein_norm_noimp <- read.prot_gene('/Users/andrewleduc/Desktop/Current_projects/Juan/prot_noimp.csv',convert_mouse)
 
-prot_meta <- read.csv('/Users/andrewleduc/Desktop/Current_projects/Senescense/Trachea/Prot_3_7/prot_meta.csv',row.names = 1)
+#  Read in mRNA data, can be found from data section in paper
+# Read in rna seq data
+Panc <- readRDS("")
 
-#  Read in mRNA data
-
-Panc <- readRDS("/Users/andrewleduc/Desktop/Current_projects/Senescense/Trachea/Trachea_3_7.rds")
-Panc <-juan
 
 
 #### Filtering mRNA and protein data correctly + correlation vector analysis ####
@@ -70,8 +71,9 @@ umap_liger_prot <- umap_liger %>% filter(Dataset == 'prot')
 umap_liger_rna <- umap_liger %>% filter(Dataset == 'mRNA')
 
 
-umap_liger_prot <- umap_liger_prot[rownames(prot_meta),]
-prot_meta$assign <- umap_liger_prot$Cluster
+
+
+
 
 
 dot_plot <- theme_classic()+theme(plot.title = element_text(hjust = .5,size = 24),
@@ -85,40 +87,17 @@ dot_plot <- theme_classic()+theme(plot.title = element_text(hjust = .5,size = 24
                                   legend.title.align=0.9)
 
 
-prot_plot <- prot_no_imp['P55095',]
-prot_meta$prot <- prot_plot
-
-# Display 
-ggscatter(prot_meta,color = 'prot', x ="UMAP_1", y = "UMAP_2" ,  size = 5, alpha=0.5) +
-  font("ylab",size=30) +
-  font("xlab",size=30) +
-  font("xy.text", size=20) +
-  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
-                        high = "red",name = '')
-
-ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = Cell_type)) + geom_point() + dot_plot
-
-Ppy <- ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = prot)) + geom_point() + dot_plot+
-  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
-                      high = "red",name = 'log2(Protein Abs.)')+ggtitle('Ppy')
-
-Ins1 <- ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = prot)) + geom_point() + dot_plot+
-  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
-                        high = "red",name = 'log2(Protein Abs.)')+ggtitle('Ins1')
-
-Gcg <- ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = prot)) + geom_point() + dot_plot+
-  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
-                        high = "red",name = 'log2(Protein Abs.)')+ggtitle('Gcg')
 
 
-(Ppy + Gcg) / (Ins1+Ins2)
+# Look at assignments on prot umap
+umap_liger_prot <- umap_liger_prot[rownames(prot_meta),]
+prot_meta$assign <- umap_liger_prot$Cluster
+ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = assign)) + geom_point() + dot_plot
 
-prot_meta$Cell_type[prot_meta$UMAP_1 > 5] <- 'Beta 2'
-prot_meta$Cell_type[prot_meta$UMAP_1 < 5 & prot_meta$UMAP_2 > -5] <- 'Beta 1'
 
-prot_meta$Cell_type[prot_meta$Cell_type == 'Endothelial'] <- 'Alpha'
 
-#init rna umap
+
+# Look at assignments on rna umap
 um_plot_mrna <- as.data.frame(Panc@reductions[["umap"]]@cell.embeddings)
 um_plot_mrna <- um_plot_mrna %>% filter(rownames(um_plot_mrna) %in% exclude_immune)
 um_plot_mrna$cond <- Panc@meta.data[["orig.ident"]]
@@ -128,10 +107,30 @@ um_plot_mrna$assign <- umap_liger_rna$Cluster
 
 ggplot(um_plot_mrna, aes(x = UMAP_1,y = UMAP_2, color = assign)) + geom_point()
 
-# Map annotations to clusters
+
+# Check markers for cleaning up clusters
+Ppy <- ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = prot)) + geom_point() + dot_plot+
+  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
+                        high = "red",name = 'log2(Protein Abs.)')+ggtitle('Ppy')
+
+Ins1 <- ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = ins1)) + geom_point() + dot_plot+
+  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
+                        high = "red",name = 'log2(Protein Abs.)')+ggtitle('Ins1')
+
+Ins2 <- ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = )) + geom_point() + dot_plot+
+  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
+                        high = "red",name = 'log2(Protein Abs.)')+ggtitle('Ins2')
+
+
+Gcg <- ggplot(prot_meta, aes(x = UMAP_1,y = UMAP_2, color = Gcg)) + geom_point() + dot_plot+
+  scale_color_gradient2(midpoint = 0, low = "blue", mid = "white",
+                        high = "red",name = 'log2(Protein Abs.)')+ggtitle('Gcg')
+
+
+(Ppy + Gcg) / (Ins1+Ins2)
+# Map annotations / clean up clusters based on marker plots
 
 clusters <- c(0,1,4,5,6)
-celltypes <- c('Basal','Fibroblast1','Fibroblast2','Goblet','Immune','Chondrocytes','Ciliated','Endothelial')
 prot_meta$Cell_type <- NA
 prot_meta$Cell_type[prot_meta$assign == 0] <- 'Basal 1'
 prot_meta$Cell_type[prot_meta$assign == 1] <- 'Basal 2'
